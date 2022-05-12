@@ -31,3 +31,5 @@ def advanced_groupby(df:pd.DataFrame,main,secondary,top=5, secondary_top=5):
 	return groups
 
 
+print(advanced_groupby(df, 'Handset Manufacturer', 'Handset Type',3, ))
+
