@@ -1,120 +1,107 @@
+import streamlit as st 
+import pandas as pd
 import streamlit as st
-import pandas as pd 
+from streamlit_option_menu import option_menu
+import pandas as pd
 import plotly.figure_factory as ff
 import plotly.express as px
-from PIL import Image
+import seaborn as sns
 
-# IMPORTING Data set
+from plot_relations import plot_relations
 
-Dataset = pd.read_csv('../Data/Week1_challenge_data_source.csv')
-CleanDataset = pd.read_csv('../Data/clean_data.csv')
-Handset_Type_image= Image.open('../image/HandsetType.JPG')
-Handset_Manufacture= Image.open('../image/ManufactureHandset.JPG')
+import sys
+sys.path.append('..')
+from sql.query import fetchall
 
-SIDEBAR_OPTION_PROJECT_WIKI = "Project Wiki"
-SIDEBAR_OPTION_ANALYSIS = "Data Exploration"
-SIDEBAR_OPTION_FORECAST = "Predict"
-SIDEBAR_OPTION_ABOUT= "About Me"
-
-
-SIDEBAR_OPTIONS = [SIDEBAR_OPTION_PROJECT_WIKI, SIDEBAR_OPTION_ANALYSIS, SIDEBAR_OPTION_FORECAST, SIDEBAR_OPTION_ABOUT]
+# imports datasets
+clean_data = pd.read_csv('../Data/clean_data.csv')
+user_data = pd.read_csv('../Data/all_user_data.csv')
+experience_data = pd.read_csv('../Data/experience_data.csv')
 
 
+# project description
+def description_function():
+	pass
 
-def wiki_section():
+# data analysis
+def analysis_function():
+	# task 1
+	st.header('Task 1')
+	# dataset in whole and columns used in it
+	st.subheader('Dataset in whole(Sample of 100 values)')
+	st.dataframe(clean_data[:100])
 
-    
-    st.subheader("User Analytics in the Telecommunication Industry")
-    
-    with st.expander("Short introduction about Telecommunication Industry challenge"):
-         st.subheader(" Task 1 - User Overview analysis ")
-         st.write("""
-         The lifeblood of any business is its customers. Businesses are always finding ways 
-         to better understand their customers so that they can provide more efficient and 
-         tailored solutions to them. Exploratory Data Analysis is a fundamental step in the data science process.
-        It involves all the processes used to familiarise oneself with the data and
-        explore initial insights that will inform further steps in the data science process.
-         """)
-         st.subheader("Task 2 - User Engagement analysis")
-         st.write("""
-         As telecom brands are the data providers of all online activities, 
-         meeting user requirements, and creating an engaging user experience is a prerequisite for them.
-        uilding & improving the QoS (Quality of Service) to leverage the mobile platforms 
-        and to get more users for the business is good but the success of the business would be determined
-        by the user engagement and activity of the customers on available apps.
+	# aggregating per user using msind
+	st.subheader('Agregating per user information(Sample of 100 Users')
+	st.dataframe(user_data[:100])
 
-         """)
+	# mean median describe and brief description
+	st.subheader('Statistical description of data')
+	st.dataframe(user_data.describe())
 
-         st.subheader("Task 3 - Experience Analytics")
-         st.write("""
-        The Telecommunication industry has experienced a great revolution since the last decade.
-        Mobile devices have become the new fashion trend and play a vital role in everyone's life. 
-        The success of the mobile industry is largely dependent on its consumers. 
-        Therefore, it is necessary for the vendors to focus on their target audience 
-        i.e. what are the needs and requirements of their consumers and how they feel and perceive their products. 
-        Tracking & evaluation of customers’ experience can help the organizations to optimize their products and services
-        so that it meets the evolving user expectations, needs, and acceptance.
-        """)
-         st.subheader("Task 4 - Satisfaction Analysis")
-         st.write("""
-        Assuming that the satisfaction of a user is dependent on user engagement and experience, 
-        you’re expected in this section to analyze customer satisfaction in depth. 
-
-        """)
-
-         
-
-def visual_analysis_section():
-     st.title(" Data Analysis ")
-    #displaying data 
-     col1, col2 = st.columns(2)
-
-     with col1:
-         st.text('Telecomunication Data set')
-         st.dataframe(Dataset)
-
-     with col2:
-          st.text('Cleaned Telecommunication Dataset')
-          st.dataframe(CleanDataset)
-
-     st.title("Visualization ")
-     col1, col2 =st.columns(2)
-     
-     #the top 10 handsets used by the customers.
-     with col1:
-
-           
-        st.image(Handset_Type_image, caption='Top 10 handset used by customer')
-
-    #top 3 handset manufacturers      
-     with col2:
-    
-        st.image(Handset_Manufacture, caption='Top 3 handset manufacturers  ')
-    
-def Prediction_section():
-    st.write(" Data Analysis And Visualization ")
-
-    #PredModel()
-   
-def About_section():
-    st.write(" Data Analysis And Visualization ")
-
-     
-     #MeetTeam()
+	# total dl and ul vs applications
+	st.subheader('Total download and upload bytes vs applications')
+	
+	plot_list = ['Social Media DL (Bytes)', 'Social Media UL (Bytes)','Google DL (Bytes)','Google UL (Bytes)','Email DL (Bytes)','Email UL (Bytes)','Youtube DL (Bytes)','Youtube UL (Bytes)','Netflix DL (Bytes)','Netflix UL (Bytes)','Gaming DL (Bytes)', 'Gaming UL (Bytes)']
+	view_plots = st.multiselect('Choose plots to view',
+			plot_list
+		)
+	
+	sample_size = st.slider('Sample Size', 1000, int(len(clean_data)))
+	for figure in view_plots:
+		main = figure
+		plot = plot_relations(clean_data[['Dur. (ms).1','Dur. (ms)','Total DL (Bytes)','Total UL (Bytes)',main]][:sample_size], main)
+		st.pyplot(plot)
+	# mean of deciles
 
 
-def main():
-    st.sidebar.success("Choose an Option")
-    SIDEBAR_STATUS = st.sidebar.selectbox('Menu Option',SIDEBAR_OPTIONS)
+	# task 2
+	st.header('Task 2')
+	# engagement clusters graph and experience
+	st.subheader('Engagement Clusters graph, Duration vs Total DL')
+	fig = px.scatter(user_data,x='Dur. (ms)',y='Total DL (Bytes)',color='Cluster Engagement', log_x=True, size_max=60)
+	fig.update_layout(width=800)
+	st.write(fig)
+	# top 3 most used applications
 
-    if SIDEBAR_STATUS == SIDEBAR_OPTION_PROJECT_WIKI:
-        wiki_section()
-    elif SIDEBAR_STATUS == SIDEBAR_OPTION_ANALYSIS:
-        visual_analysis_section()
-    elif SIDEBAR_STATUS == SIDEBAR_OPTION_FORECAST:
-        Prediction_section()
-    elif SIDEBAR_STATUS == SIDEBAR_OPTION_ABOUT:
-        About_section()
-    else:
-        pass
-main()  
+	# task 3
+	# experience clusters graph
+	st.subheader('Experience Clusters graph, Avg RTT DL (ms) vs DL TP < 50 Kbps (%)')
+	fig = px.scatter(user_data,x='Avg RTT DL (ms)',y='DL TP < 50 Kbps (%)',color='Cluster Experience', log_x=True, size_max=60)
+	fig.update_layout(width=800)
+	st.write(fig)
+
+	# task 4
+	st.header('Task 4')
+	# top 10 most satisfied customers
+	st.subheader('Top 10 most satisfied customers')
+	sample_size = st.slider('Sample Size', 10, int(len(experience_data)))
+	st.dataframe(experience_data.sort_values('Satisfaction Score',axis=0, ascending=False, inplace=False)[:sample_size])
+	# screenshot of db fetch
+
+
+
+# model prediction testing
+def ai_function():
+	pass
+
+# sidebar menu
+with st.sidebar:
+	selected = option_menu(
+			menu_title = 'Menu',
+			options = ['Analysis']
+		)
+
+if selected == 'Project Description':
+	st.title('Project Description')
+	description_function()
+
+if selected == 'Analysis':
+	st.title('Analysis')
+	analysis_function()
+
+if selected == 'AI':
+	ai_function()
+
+if selected == 'About Me':
+	st.title('About Me')
